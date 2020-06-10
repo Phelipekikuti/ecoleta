@@ -1,58 +1,22 @@
 import express from 'express';
-import knex from './database/connection';
+
+import PointsController from './controllers/pointsController';
+import ItemsController from './controllers/itemsController';
 
 const routes = express.Router();
+const pointsController = new PointsController();
+const itemsController = new ItemsController();
 
 //buscar listagem dos usuarios
-routes.get('/items', async (request, response) => {  
-  const items = await knex('items').select('*');
-
-  const serializedItems = items.map(item => {
-    return {
-      id: item.id,      
-      title: item.title,
-      image_url: `http://localhost:3333/uploads/${item.image}`
-    };
-  });
-  
-  
-  return response.json(serializedItems);
-});
+routes.get('/items', itemsController.index);
 
 //cadastra pontos de coleta
-routes.post('/points', async (request, response) => {
-  const {
-    name,
-    email,
-    whatsapp,    
-    city,
-    uf,
-    latitude,
-    longitude,
-    items
-  } = request.body;
+routes.post('/points', pointsController.create);
 
-  const ids = await knex('points').insert({
-    image: 'image-fake',
-    name,
-    email,
-    whatsapp,
-    city,
-    uf,
-    latitude,
-    longitude,
-  });
+//lista ponto especifico
+routes.get('/points/:id', pointsController.show);
 
-  const pointItems = items.map((item_id: number) => {
-    return {
-      item_id,
-      point_id: ids[0],
-    };
-  })
-
-  await knex('point_items').insert(pointItems);
-
-  return response.json({ success: true });
-});
+//filtra pontos
+routes.get('/points', pointsController.index);
 
 export default routes;
